@@ -30,6 +30,18 @@
   </dependencies>
 
   <build>
+
+
+ <resources>
+  <resource>
+    <directory>fonts</directory>
+    <targetPath>fonts</targetPath>
+    <includes>
+      <include>**/*.ttf</include>
+    </includes>
+  </resource>
+</resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
