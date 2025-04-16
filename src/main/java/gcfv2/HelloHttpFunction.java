@@ -6,37 +6,37 @@ import com.google.cloud.functions.HttpResponse;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.io.font.FontConstants;
-import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.source.ByteArrayOutputStream;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.layout.font.FontProvider;
 
-import java.io.OutputStream;
 import java.io.InputStream;
-import java.nio.file.Paths;
-import java.nio.file.Files;
+import java.io.OutputStream;
 
 public class HelloHttpFunction implements HttpFunction {
 
     @Override
     public void service(HttpRequest request, HttpResponse response) throws Exception {
-        // Leer HTML desde el cuerpo
         String html = request.getReader().lines()
                 .reduce("", (accumulator, actual) -> accumulator + actual);
 
-        // Configurar la respuesta
-        response.setContentType("application/pdf");
-        OutputStream outputStream = response.getOutputStream();
-
-        // Cargar la fuente desde la carpeta 'fonts'
+        // Cargar la fuente personalizada desde resources
         FontProvider fontProvider = new FontProvider();
-        fontProvider.addFont("fonts/ARIAL.ttf");
+        try (InputStream fontStream = getClass().getClassLoader().getResourceAsStream("fonts/ARIAL.ttf")) {
+            if (fontStream != null) {
+                fontProvider.addFont(fontStream);
+            } else {
+                throw new RuntimeException("Fuente no encontrada en /resources/fonts/ARIAL.ttf");
+            }
+        }
 
-        ConverterProperties properties = new ConverterProperties();
-        properties.setFontProvider(fontProvider);
-        properties.setCharset("UTF-8");
+        ConverterProperties converterProperties = new ConverterProperties();
+        converterProperties.setFontProvider(fontProvider);
+        converterProperties.setCharset("UTF-8");
 
-        // Convertir HTML a PDF
-        HtmlConverter.convertToPdf(html, outputStream, properties);
+        response.setContentType("application/pdf");
+
+        OutputStream outputStream = response.getOutputStream();
+        HtmlConverter.convertToPdf(html, outputStream, converterProperties);
     }
 }
