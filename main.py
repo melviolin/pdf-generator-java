@@ -15,21 +15,21 @@ def find_coords():
 
     doc = fitz.open(stream=pdf_data, filetype="pdf")
 
-    # Diccionarios para almacenar la estructura final
     busqueda = {}
     paginas = {}
-
-    # Lista para almacenar coordenadas por palabra
     coords_list = []
 
     for page_number, page in enumerate(doc, start=1):
-        # Guardamos las dimensiones de la página
+        text_instances = page.search_for(word)
+        if not text_instances:
+            continue  # Saltar páginas sin resultados
+
+        # Agregamos la dimensión solo si hubo coincidencias
         paginas[str(page_number)] = {
             "height": float(page.rect.height),
             "width": float(page.rect.width)
         }
 
-        text_instances = page.search_for(word)
         for inst in text_instances:
             coords_list.append({
                 "page": page_number,
@@ -39,10 +39,8 @@ def find_coords():
                 "y1": float(inst.y1)
             })
 
-    # Asociamos la palabra a su lista de coordenadas
     busqueda[word] = coords_list
 
-    # Estructura final
     resultado = {
         "busqueda": busqueda,
         "paginas": paginas
